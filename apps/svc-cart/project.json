@@ -1,0 +1,63 @@
+{
+  "name": "svc-cart",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/svc-cart/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/svc-cart",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/svc-cart/src/main.ts",
+        "tsConfig": "apps/svc-cart/tsconfig.app.json",
+        "assets": ["apps/svc-cart/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "svc-cart:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "svc-cart:build:development"
+        },
+        "production": {
+          "buildTarget": "svc-cart:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/svc-cart/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,52 @@
+FROM node:20-alpine
+WORKDIR /opt/app
+RUN npm install
+ADD . .
+RUN npx nx run api:build 
+CMD ["node", '../../dist/apps/api/main.js']
+
+
+#----------------------
+# 1. varian from internet
+#node docker file from https://creotip.io/posts/nx-monorepo-running-microservices-locally-with-docker-kubernetes
+#FROM node:20-alpine
+#WORKDIR /app
+#COPY ./dist/apps/api .
+#COPY package.json package-lock.json ./
+#ENV PORT=3333
+#EXPOSE ${PORT}
+#RUN npm install --production
+## dependencies that express needs
+#RUN npm install reflect-metadata tslib rxjs express
+#CMD node ./main.js
+
+#-------------------------
+# 1. varian from nx create node app type=node
+##
+## Run the container with `docker run -p 3000:3000 -t orders-api`.
+#FROM docker.io/node:lts-alpine
+
+#ENV HOST=0.0.0.0
+#ENV PORT=3000
+
+#WORKDIR /app
+
+#RUN addgroup --system orders-api && \
+#	adduser --system -G orders-api orders-api
+
+#COPY dist/apps/orders-api orders-api
+#RUN chown -R orders-api:orders-api .
+
+## You can remove this install step if you build with `--bundle` option.
+## The bundled output will include external dependencies.
+#RUN npm --prefix orders-api --omit=dev -f install
+
+#CMD [ "node", "orders-api" ]
+
+#-------------------
+#2. create docker images. variant from internet
+#Build docker images of express microservices#
+#First build the express app. You will see the output in the dist directory.
+#
+#nx build svc-cart && nx build svc-products && nx build svc-user
+#or npx nx run api:build         or npx nx run orders-api:build

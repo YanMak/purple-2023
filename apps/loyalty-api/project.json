@@ -1,0 +1,50 @@
+{
+  "name": "loyalty-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/loyalty-api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/loyalty-api",
+        "main": "apps/loyalty-api/src/main.ts",
+        "tsConfig": "apps/loyalty-api/tsconfig.app.json",
+        "assets": ["apps/loyalty-api/src/assets"],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/loyalty-api/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "loyalty-api:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "loyalty-api:build:development"
+        },
+        "production": {
+          "buildTarget": "loyalty-api:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/loyalty-api/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

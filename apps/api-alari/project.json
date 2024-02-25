@@ -1,0 +1,50 @@
+{
+  "name": "api-alari",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api-alari/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/api-alari",
+        "main": "apps/api-alari/src/main.ts",
+        "tsConfig": "apps/api-alari/tsconfig.app.json",
+        "assets": ["apps/api-alari/src/assets"],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/api-alari/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "api-alari:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "api-alari:build:development"
+        },
+        "production": {
+          "buildTarget": "api-alari:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/api-alari/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}
