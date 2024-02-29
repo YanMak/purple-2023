@@ -8,6 +8,7 @@ import { getDateForXML } from '../helpers/date-for-xml';
 import { ILoymaxCashRegister } from '../interfaces/cash-register.interface';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
+import { balanceErrorHandler } from '../helpers/errors/balance-errors';
 
 @Injectable()
 export class LoymaxBalanceService {
@@ -85,6 +86,20 @@ export class LoymaxBalanceService {
     });*/
 
     const result = await parser.parseStringPromise(bodyXML);
+
+    const errorCode =
+      result['XMLResponse']['Balances'][0]['BalanceResponse'][0]['$'];
+
+    /*  const errorHandler = balanceErrorHandler(errorCode);
+    if (errorHandler.statusCode !== 200) {
+      //throw new NotFoundException(errorHandler.message);
+      return errorHandler;
+    }*/
+    balanceErrorHandler(errorCode);
+
+    console.log(`errorCode:`);
+    console.log(errorCode);
+
     const balanceResponse =
       result['XMLResponse']['Balances'][0]['BalanceResponse'];
 

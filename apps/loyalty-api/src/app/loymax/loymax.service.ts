@@ -97,8 +97,16 @@ export class LoymaxService {
       requestPayload,
       cashRegisterId
     );
-    console.log(data);
-    return { xmlResult: data };
+
+    const parsed = await this.loymaxDiscountService.parseDiscountResponceXML(
+      data
+    );
+    console.log(parsed);
+    return parsed;
+
+    //console.log(data);
+    //return { xmlResult: data };
+
     /*
 	  const parsed = await this.loymaxDiscountService.parseBalanceResponceXML(
 		data
@@ -127,7 +135,13 @@ export class LoymaxService {
       );
     console.log(data);
 
-    return { xmlResult: data };
+    const parsed =
+      await this.loymaxConfirmPurchaseService.parseConfirmPurchaseResponceXML(
+        data
+      );
+    console.log(parsed);
+    return parsed;
+    //return { xmlResult: data };
     /*const parsed = await this.loymaxBalanceService.parseBalanceResponceXMLPayload(
       data
     );

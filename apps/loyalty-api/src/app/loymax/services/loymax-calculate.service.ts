@@ -15,6 +15,7 @@ import {
 } from '../interfaces/calculate.interface';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
+import { calculateErrorHandler } from '../helpers/errors/calculate-errors';
 
 @Injectable()
 export class LoymaxCalculateService {
@@ -153,6 +154,14 @@ export class LoymaxCalculateService {
     const parser = new Parser();
 
     const result = await parser.parseStringPromise(bodyXML);
+
+    const errorCode =
+      result['XMLResponse']['Calculates'][0]['CalculateResponse'][0]['$'];
+    /*const errorHandler = calculateErrorHandler(errorCode);
+    if (errorHandler.statusCode !== 200 && errorHandler.statusCode !== 201) {
+      return errorHandler;
+    }*/
+    calculateErrorHandler(errorCode);
 
     const calculateResponse =
       result['XMLResponse']['Calculates'][0]['CalculateResponse'];

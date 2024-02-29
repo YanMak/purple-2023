@@ -6,7 +6,7 @@ import { LOYMAX_API_VERSION } from '../loymax.constants';
 import { generatePurchaseId } from '../../helpers/generate-purchase-id';
 import { generateChequeId } from '../../helpers/generate-cheque-id';
 import { generateOperationId } from '../../helpers/generate-operation-id';
-import { Builder } from 'xml2js';
+import { Builder, Parser } from 'xml2js';
 import { getDateForXML } from '../helpers/date-for-xml';
 import { ILoymaxDiscountProductRequest } from '../interfaces/discount.interface';
 import { discountRequestChequeLines } from '../helpers/discount-conversions';
@@ -14,6 +14,7 @@ import { ILoymaxPay } from '../interfaces/pay.interface';
 import { payChequeLines } from '../helpers/pay-conversion';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
+import { discountErrorHandler } from '../helpers/errors/discount-errors';
 
 @Injectable()
 export class LoymaxDiscountService {
@@ -148,5 +149,17 @@ export class LoymaxDiscountService {
     console.log(data);
     console.log('_____________________');
     return data;
+  }
+
+  async parseDiscountResponceXML(bodyXML: string) {
+    const parser = new Parser();
+
+    const result = await parser.parseStringPromise(bodyXML);
+
+    const errorCode =
+      result['XMLResponse']['Discounts'][0]['DiscountResponse'][0]['$'];
+    const errorHandler = discountErrorHandler(errorCode);
+
+    return errorHandler;
   }
 }
