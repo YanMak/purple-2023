@@ -77,7 +77,7 @@ export class LoymaxBalanceService {
     return data;
   }
 
-  async parseBalanceResponceXML(bodyXML: string) {
+  async parseBalanceResponseXML(bodyXML: string) {
     const parser = new Parser();
     /*parser.parseString(bodyXML, function (err, result) {
       //Extract the value from the data element

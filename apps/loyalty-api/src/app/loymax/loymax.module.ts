@@ -6,6 +6,9 @@ import { LoymaxBalanceService } from './services/loymax-balance.service';
 import { LoymaxCalculateService } from './services/loymax-calculate.service';
 import { LoymaxDiscountService } from './services/loymax-discount.service';
 import { LoymaxConfirmPurchaseService } from './services/loymax-confirm-purchase.service';
+import { LoymaxAvailableAmountService } from './services/loymax-available-amount.service';
+import { LoymaxCancelPurchaseService } from './services/cancel-purchase.service';
+import { LoymaxPaymentService } from './services/loymax-payment.service';
 
 @Module({
   imports: [
@@ -16,8 +19,11 @@ import { LoymaxConfirmPurchaseService } from './services/loymax-confirm-purchase
     LoymaxService,
     LoymaxBalanceService,
     LoymaxCalculateService,
+    LoymaxAvailableAmountService,
     LoymaxDiscountService,
     LoymaxConfirmPurchaseService,
+    LoymaxCancelPurchaseService,
+    LoymaxPaymentService,
   ],
   exports: [LoymaxService],
 })

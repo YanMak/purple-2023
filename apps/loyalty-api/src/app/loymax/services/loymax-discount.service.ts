@@ -15,6 +15,8 @@ import { payChequeLines } from '../helpers/pay-conversion';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
 import { discountErrorHandler } from '../helpers/errors/discount-errors';
+import { couponsLines } from '../helpers/coupon-conversion';
+import { ILoymaxCoupon } from '../interfaces/coupon.interface';
 
 @Injectable()
 export class LoymaxDiscountService {
@@ -38,29 +40,32 @@ export class LoymaxDiscountService {
     products,
     pays,
     purchaseId,
-    chequeNumber,
+    chequeId,
     chequeDate,
+    coupons,
   }: {
     customerId: string;
     cashRegisterId: string;
     products: ILoymaxDiscountProductRequest[];
     pays: ILoymaxPay[];
     purchaseId?: string;
-    chequeNumber?: string;
-    chequeDate?: Date;
+    chequeId?: string;
+    chequeDate?: string;
+    coupons: ILoymaxCoupon[];
   }) {
     const operationID = await generateOperationId(); // always newly generated
     if (!purchaseId) {
       purchaseId = await generatePurchaseId();
     }
-    if (!chequeNumber) {
-      chequeNumber = await generateChequeId();
+    if (!chequeId) {
+      chequeId = await generateChequeId();
     }
     let chequeDateString = '';
     if (!chequeDate) {
       chequeDateString = getDateForXML(new Date());
     } else {
-      chequeDateString = getDateForXML(chequeDate);
+      //chequeDateString = getDateForXML(chequeDate);
+      chequeDateString = chequeDate;
     }
     const lastmod = getDateForXML(new Date());
 
@@ -85,13 +90,13 @@ export class LoymaxDiscountService {
               OperationDate: lastmod,
               DeviceLogicalID: cashRegisterId,
               PurchaseID: purchaseId,
-              Cashier: 'Арзуманова Алекс',
+              Cashier: 'Администратор077',
             },
             Identifier: {
               $: { Type: 'Auto', Value: customerId },
             },
             Cheque: {
-              $: { ChequeNumber: chequeNumber, ChequeDate: chequeDateString },
+              $: { ChequeNumber: chequeId, ChequeDate: chequeDateString },
               ChequeLine: discountRequestChequeLines(products),
               /*[
                 {
@@ -117,7 +122,7 @@ export class LoymaxDiscountService {
               ],*/
             },
             Coupons: {
-              Coupon: { $: { Number: 'KURTKA20' } },
+              Coupon: couponsLines(coupons),
             },
             Pays: {
               Pay: payChequeLines(pays),
@@ -151,7 +156,7 @@ export class LoymaxDiscountService {
     return data;
   }
 
-  async parseDiscountResponceXML(bodyXML: string) {
+  async parseDiscountResponseXML(bodyXML: string) {
     const parser = new Parser();
 
     const result = await parser.parseStringPromise(bodyXML);

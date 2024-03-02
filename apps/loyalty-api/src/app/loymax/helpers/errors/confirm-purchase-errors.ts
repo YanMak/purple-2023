@@ -1,8 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
-import { ILoymaxXMLResponceErrorCode } from '../../interfaces/errors.interface';
+import { ILoymaxXMLResponseErrorCode } from '../../interfaces/errors.interface';
 
 export function confirmPurchaseErrorHandler(
-  error: ILoymaxXMLResponceErrorCode
+  error: ILoymaxXMLResponseErrorCode
 ) {
   if (error.ErrorCode === '0') {
     return error;

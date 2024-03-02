@@ -1,4 +1,4 @@
-export interface ILoymaxCalculateProductRequest {
+export interface ILoymaxAvailableAmountProductRequest {
   positionId: number;
   productId: string;
   quantity: number;
@@ -7,7 +7,7 @@ export interface ILoymaxCalculateProductRequest {
   name: string;
 }
 
-export interface ILoymaxCalculateProductResult {
+export interface ILoymaxAvailableAmountProductResult {
   positionId: number;
   productId: string;
   quantity: number;

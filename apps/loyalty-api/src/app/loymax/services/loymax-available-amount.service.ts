@@ -8,19 +8,15 @@ import { generateChequeId } from '../../helpers/generate-cheque-id';
 import { generateOperationId } from '../../helpers/generate-operation-id';
 import { Builder, Parser } from 'xml2js';
 import { getDateForXML } from '../helpers/date-for-xml';
-import { calculateRequestChequeLines } from '../helpers/calculate-conversions';
-import {
-  ILoymaxCalculateProductRequest,
-  ILoymaxCalculateProductResult,
-} from '../interfaces/calculate.interface';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
-import { calculateErrorHandler } from '../helpers/errors/calculate-errors';
-import { couponsLines } from '../helpers/coupon-conversion';
-import { ILoymaxCoupon } from '../interfaces/coupon.interface';
+import { availableAmountRequestChequeLines } from '../helpers/available-amount-conversions';
+import { ILoymaxAvailableAmountProductRequest } from '../interfaces/available-amount.interface';
+import { availableAmmountErrorHandler } from '../helpers/errors/available-amount-errors';
+//import { couponsLines } from '../helpers/coupon-conversion';
 
 @Injectable()
-export class LoymaxCalculateService {
+export class LoymaxAvailableAmountService {
   //user: string;
   //password: string;
   url: string;
@@ -35,7 +31,21 @@ export class LoymaxCalculateService {
     console.log(this.cashRegisters);
   }
 
-  async getCalculateRequestXML({
+  /*
+  <XMLRequest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Version>3.2</Version>
+	<AvailableAmounts>
+		<AvailableAmountRequest ElementID="1" OperationID="e62164a51b3d4fa2a760050b877b0ec6" OperationDate="2024-02-29T14:09:23+03:00" DeviceLogicalID="inc22722" PurchaseID="4a09fa86860441b08af4bf76fc6351f9" Cashier="Администратор077">
+			<Cheque ChequeNumber="29022024134716" ChequeDate="2024-02-29T13:47:16">
+				<ChequeLine PosID="1" Amount="3999" Name="Юбка джинсовая жен.: Некондиция -50%" Quantity="1" GoodsId="2029010365396" Price="3999"/>
+				<ChequeLine PosID="2" Amount="1999" Name="Куртка утепленная жен.: (171563)алый,XS(42)/170" Quantity="1" GoodsId="2029010023241" Price="1999"/>
+			</Cheque>
+			<Identifier Type="Auto" Value="79269167763"/>
+		</AvailableAmountRequest>
+	</AvailableAmounts>
+</XMLRequest>*/
+
+  async getAvailableAmountRequestXML({
     customerId,
     cashRegisterId,
     products,
@@ -46,11 +56,11 @@ export class LoymaxCalculateService {
   }: {
     customerId: string;
     cashRegisterId: string;
-    products: ILoymaxCalculateProductRequest[];
+    products: ILoymaxAvailableAmountProductRequest[];
     purchaseId?: string;
     chequeId?: string;
     chequeDate?: string;
-    coupons: ILoymaxCoupon[];
+    coupons;
   }) {
     const operationID = await generateOperationId(); // always newly generated
     if (!purchaseId) {
@@ -74,6 +84,9 @@ export class LoymaxCalculateService {
         encoding: 'UTF-8',
       },
     });
+
+    console.log(coupons);
+
     return builder.buildObject({
       XMLRequest: {
         $: {
@@ -81,8 +94,8 @@ export class LoymaxCalculateService {
           'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
         },
         Version: LOYMAX_API_VERSION,
-        Calculates: {
-          CalculateRequest: {
+        AvailableAmounts: {
+          AvailableAmountRequest: {
             $: {
               ElementID: '1',
               OperationID: operationID,
@@ -91,47 +104,17 @@ export class LoymaxCalculateService {
               PurchaseID: purchaseId,
               Cashier: 'Администратор077',
             },
-            Identifier: {
-              $: { Type: 'Auto', Value: customerId },
-            },
             Cheque: {
               $: { ChequeNumber: chequeId, ChequeDate: chequeDateString },
-              ChequeLine: calculateRequestChequeLines(products),
-              /*[
-                {
-                  $: {
-                    PosID: '1',
-                    Amount: '3999',
-                    Name: 'Юбка джинсовая жен.: Некондиция -50%',
-                    Quantity: '1',
-                    GoodsId: '2029010365396',
-                    Price: '3999',
-                  },
-                },
-                {
-                  $: {
-                    PosID: '2',
-                    Amount: '1999',
-                    Name: 'Куртка утепленная жен.: (171563)алый,XS(42)/170',
-                    Quantity: '1',
-                    GoodsId: '2029010023241',
-                    Price: '1999',
-                  },
-                },
-              ],*/
+              ChequeLine: availableAmountRequestChequeLines(products),
             },
+            /*Coupons': The element 'AvailableAmountRequest' has invalid child element 'Coupons'. List of possible elements expected: 'Identifier, Card, Params'. (line 11, pos 8)
             Coupons: {
               Coupon: couponsLines(coupons),
             },
-            /*Coupons: {
-              Coupon: { $: { Number: 'KURTKA20' } },
-            },*/
-            Params: {
-              Param: [
-                { $: { Name: 'Eco', Type: 'string', Value: 'No' } },
-                { $: { Name: 'SaleType', Type: 'string', Value: 'offline' } },
-                { $: { Name: 'NoSale', Type: 'string', Value: 'No' } },
-              ],
+            */
+            Identifier: {
+              $: { Type: 'Auto', Value: customerId },
             },
           },
         },
@@ -139,7 +122,10 @@ export class LoymaxCalculateService {
     });
   }
 
-  async sendCalculateQuery(bodyXML: string, cashRegisterId: string) {
+  async sendAvailableAmountRequestQuery(
+    bodyXML: string,
+    cashRegisterId: string
+  ) {
     console.log(bodyXML);
     const cashRegister = getCashRegisterData(
       this.cashRegisters,
@@ -158,35 +144,37 @@ export class LoymaxCalculateService {
     return data;
   }
 
-  async parseCalculateResponseXML(bodyXML: string) {
+  async parseAvailableAmountResponseXML(bodyXML: string) {
     const parser = new Parser();
 
     const result = await parser.parseStringPromise(bodyXML);
 
     const errorCode =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'][0]['$'];
+      result['XMLResponse']['AvailableAmounts'][0][
+        'AvailableAmountResponse'
+      ][0]['$'];
     /*const errorHandler = calculateErrorHandler(errorCode);
     if (errorHandler.statusCode !== 200 && errorHandler.statusCode !== 201) {
       return errorHandler;
     }*/
-    calculateErrorHandler(errorCode);
+    availableAmmountErrorHandler(errorCode);
 
-    const calculateResponse =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'];
-    const balance = parseInt(calculateResponse[0]['$']['Balance']);
+    const availableAmountResponse =
+      result['XMLResponse']['AvailableAmounts'][0]['AvailableAmountResponse'];
     const availableBonusAmount = parseInt(
-      calculateResponse[0]['$']['AvailableBonusAmount']
+      availableAmountResponse[0]['$']['BonusAmount']
     );
-    const availableAmount = parseInt(
-      calculateResponse[0]['$']['AvailableAmount']
-    );
+    const availableAmount = parseInt(availableAmountResponse[0]['$']['Amount']);
 
+    /*
     const Cheque =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'][0]['Cheque'];
+      result['XMLResponse']['AvailableAmounts'][0][
+        'AvailableAmountResponse'
+      ][0]['Cheque'];
 
     console.log(Cheque);
 
-    const productsResponse: ILoymaxCalculateProductResult[] = [];
+    const productsResponse: ILoymaxAvailableAmountProductResult[] = [];
     Cheque[0].ChequeLine.map((item) => {
       productsResponse.push({
         positionId: parseInt(item['$'].PosID),
@@ -201,12 +189,11 @@ export class LoymaxCalculateService {
       });
     });
     console.log(productsResponse);
+*/
 
     return {
-      balance,
       availableBonusAmount,
       availableAmount,
-      products: productsResponse,
     };
   }
 }

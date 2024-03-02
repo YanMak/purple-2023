@@ -8,19 +8,19 @@ import { generateChequeId } from '../../helpers/generate-cheque-id';
 import { generateOperationId } from '../../helpers/generate-operation-id';
 import { Builder, Parser } from 'xml2js';
 import { getDateForXML } from '../helpers/date-for-xml';
-import { calculateRequestChequeLines } from '../helpers/calculate-conversions';
-import {
-  ILoymaxCalculateProductRequest,
-  ILoymaxCalculateProductResult,
-} from '../interfaces/calculate.interface';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
 import { calculateErrorHandler } from '../helpers/errors/calculate-errors';
+import {
+  ILoymaxPaymentProductRequest,
+  ILoymaxPaymentProductResult,
+} from '../interfaces/payment.interface';
+import { paymentRequestChequeLines } from '../helpers/payment-conversion';
 import { couponsLines } from '../helpers/coupon-conversion';
 import { ILoymaxCoupon } from '../interfaces/coupon.interface';
 
 @Injectable()
-export class LoymaxCalculateService {
+export class LoymaxPaymentService {
   //user: string;
   //password: string;
   url: string;
@@ -35,21 +35,41 @@ export class LoymaxCalculateService {
     console.log(this.cashRegisters);
   }
 
-  async getCalculateRequestXML({
+  /*
+  <XMLRequest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Version>3.2</Version>
+	<Payments>
+		<PaymentRequest ElementID="1" OperationID="5a15b03cc03b4e54a4c314b9044728cc" OperationDate="2024-02-29T22:37:45+03:00" DeviceLogicalID="inc22722" PurchaseID="4a09fa86860441b08af4bf76fc6351f9" Cashier="Администратор077" Amount="100">
+			<Cheque ChequeNumber="29022024134716" ChequeDate="2024-02-29T13:47:16">
+				<ChequeLine PosID="1" Amount="3999" Name="Юбка джинсовая жен.: Некондиция -50%" GoodsId="2029010365396" Price="3999" Quantity="1"/>
+				<ChequeLine PosID="2" Amount="1999" Name="Куртка утепленная жен.: (171563)алый,XS(42)/170" GoodsId="2029010023241" Price="1999" Quantity="1"/>
+				<ChequeLine PosID="3" Amount="2398.5" Name="Блузка жен.: (000000)кипенно-белый,XS(42)/170" GoodsId="2029009959681" Price="1599" Quantity="2"/>
+			</Cheque>
+			<Identifier Type="Auto" Value="79269167763"/>
+			<Coupons>
+				<Coupon Number="KURTKA20"/>
+			</Coupons>
+		</PaymentRequest>
+	</Payments>
+</XMLRequest>*/
+
+  async getPaymentRequestXML({
     customerId,
     cashRegisterId,
     products,
     purchaseId,
     chequeId,
     chequeDate,
+    bonusWriteOffAmount,
     coupons,
   }: {
     customerId: string;
     cashRegisterId: string;
-    products: ILoymaxCalculateProductRequest[];
+    products: ILoymaxPaymentProductRequest[];
     purchaseId?: string;
     chequeId?: string;
     chequeDate?: string;
+    bonusWriteOffAmount: number;
     coupons: ILoymaxCoupon[];
   }) {
     const operationID = await generateOperationId(); // always newly generated
@@ -81,8 +101,8 @@ export class LoymaxCalculateService {
           'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
         },
         Version: LOYMAX_API_VERSION,
-        Calculates: {
-          CalculateRequest: {
+        Payments: {
+          PaymentRequest: {
             $: {
               ElementID: '1',
               OperationID: operationID,
@@ -90,56 +110,28 @@ export class LoymaxCalculateService {
               DeviceLogicalID: cashRegisterId,
               PurchaseID: purchaseId,
               Cashier: 'Администратор077',
-            },
-            Identifier: {
-              $: { Type: 'Auto', Value: customerId },
+              Amount: '' + bonusWriteOffAmount,
             },
             Cheque: {
               $: { ChequeNumber: chequeId, ChequeDate: chequeDateString },
-              ChequeLine: calculateRequestChequeLines(products),
-              /*[
-                {
-                  $: {
-                    PosID: '1',
-                    Amount: '3999',
-                    Name: 'Юбка джинсовая жен.: Некондиция -50%',
-                    Quantity: '1',
-                    GoodsId: '2029010365396',
-                    Price: '3999',
-                  },
-                },
-                {
-                  $: {
-                    PosID: '2',
-                    Amount: '1999',
-                    Name: 'Куртка утепленная жен.: (171563)алый,XS(42)/170',
-                    Quantity: '1',
-                    GoodsId: '2029010023241',
-                    Price: '1999',
-                  },
-                },
-              ],*/
+              ChequeLine: paymentRequestChequeLines(products),
+            },
+            Identifier: {
+              $: { Type: 'Auto', Value: customerId },
             },
             Coupons: {
               Coupon: couponsLines(coupons),
             },
             /*Coupons: {
               Coupon: { $: { Number: 'KURTKA20' } },
-            },*/
-            Params: {
-              Param: [
-                { $: { Name: 'Eco', Type: 'string', Value: 'No' } },
-                { $: { Name: 'SaleType', Type: 'string', Value: 'offline' } },
-                { $: { Name: 'NoSale', Type: 'string', Value: 'No' } },
-              ],
-            },
+            }*/
           },
         },
       },
     });
   }
 
-  async sendCalculateQuery(bodyXML: string, cashRegisterId: string) {
+  async sendPaymentRequestQuery(bodyXML: string, cashRegisterId: string) {
     console.log(bodyXML);
     const cashRegister = getCashRegisterData(
       this.cashRegisters,
@@ -158,35 +150,45 @@ export class LoymaxCalculateService {
     return data;
   }
 
-  async parseCalculateResponseXML(bodyXML: string) {
+  /*
+  <?xml version="1.0" encoding="utf-8"?>
+  <XMLResponse><Version>3.2</Version><ErrorCode>0</ErrorCode>
+  <Payments>
+  <PaymentResponse ErrorCode="0" DeviceLogicalID="inc22722" OperationID="e65ab819f9d2464ba4d8b121b31e7bc2" TransactionID="6361874" AuthCode="405415" Amount="100.00" BonusAmount="100.00">
+  <IdentifierData><Item Name="Person">Ян Макошанец</Item><Item Name="MaskedNumber">**** **** **** 8638</Item><Item Name="CardType">BonusCard</Item><Item Name="Status">Activated</Item><Item Name="Cardnumber">9200111728638</Item></IdentifierData>
+  <ChequeMessage>Списано: 100 бонусов!</ChequeMessage>
+  <Cheque><ChequeLine PosID="1" Amount="2398.50" Discount="799.50" Quantity="2.000" PayAmount="0.00" GoodsId="2029009959681"><AppliedOffers><Offer Id="20" VersionId="2887" Name="Оплата бонусами в размере до 30% от суммы чека" ExternalId="433ffb2f-8c39-4a49-a034-8b7bce927958" Quantity="2" PrerefenceValue="0.00" CurrencyAbbreviation="бнс." />
+  </AppliedOffers>
+  </ChequeLine><ChequeLine PosID="2" Amount="3999.00" Discount="0.00" Quantity="1.000" PayAmount="100.00" GoodsId="2029010365396">
+  <AppliedOffers><Offer Id="20" VersionId="2887" Name="Оплата бонусами в размере до 30% от суммы чека" ExternalId="433ffb2f-8c39-4a49-a034-8b7bce927958" Quantity="1" PrerefenceValue="100.00" CurrencyAbbreviation="бнс." />
+  </AppliedOffers></ChequeLine><ChequeLine PosID="3" Amount="1999.00" Discount="0.00" Quantity="1.000" PayAmount="0.00" GoodsId="2029010023241"><AppliedOffers><Offer Id="20" VersionId="2887" Name="Оплата бонусами в размере до 30% от суммы чека" ExternalId="433ffb2f-8c39-4a49-a034-8b7bce927958" Quantity="1" PrerefenceValue="0.00" CurrencyAbbreviation="бнс." /></AppliedOffers></ChequeLine></Cheque><LoyaltyPrograms><LoyaltyProgram Name="Default" /></LoyaltyPrograms></PaymentResponse></Payments></XMLResponse>
+  */
+  async parsePaymentResponseXML(bodyXML: string) {
     const parser = new Parser();
 
     const result = await parser.parseStringPromise(bodyXML);
 
     const errorCode =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'][0]['$'];
+      result['XMLResponse']['Payments'][0]['PaymentResponse'][0]['$'];
     /*const errorHandler = calculateErrorHandler(errorCode);
     if (errorHandler.statusCode !== 200 && errorHandler.statusCode !== 201) {
       return errorHandler;
     }*/
     calculateErrorHandler(errorCode);
 
-    const calculateResponse =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'];
-    const balance = parseInt(calculateResponse[0]['$']['Balance']);
+    const availableAmountResponse =
+      result['XMLResponse']['Payments'][0]['PaymentResponse'];
     const availableBonusAmount = parseInt(
-      calculateResponse[0]['$']['AvailableBonusAmount']
+      availableAmountResponse[0]['$']['BonusAmount']
     );
-    const availableAmount = parseInt(
-      calculateResponse[0]['$']['AvailableAmount']
-    );
+    const availableAmount = parseInt(availableAmountResponse[0]['$']['Amount']);
 
     const Cheque =
-      result['XMLResponse']['Calculates'][0]['CalculateResponse'][0]['Cheque'];
+      result['XMLResponse']['Payments'][0]['PaymentResponse'][0]['Cheque'];
 
     console.log(Cheque);
 
-    const productsResponse: ILoymaxCalculateProductResult[] = [];
+    const productsResponse: ILoymaxPaymentProductResult[] = [];
     Cheque[0].ChequeLine.map((item) => {
       productsResponse.push({
         positionId: parseInt(item['$'].PosID),
@@ -195,15 +197,12 @@ export class LoymaxCalculateService {
         amount: parseFloat(item['$'].Amount),
         cashback: parseFloat(item['$'].Cashback),
         discount: parseFloat(item['$'].Discount),
-        availableBonusPay: item['$'].PayAmount
-          ? parseFloat(item['$'].PayAmount)
-          : 0,
+        bonusPay: item['$'].PayAmount ? parseFloat(item['$'].PayAmount) : 0,
       });
     });
     console.log(productsResponse);
 
     return {
-      balance,
       availableBonusAmount,
       availableAmount,
       products: productsResponse,

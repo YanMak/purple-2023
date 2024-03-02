@@ -1,3 +1,13 @@
+export interface ILoyaltyOperationMetaInterface {
+  purchaseId: string;
+  chequeId: string;
+  chequeDate: string;
+}
+
+export interface ILoyaltyCoupon {
+  couponName: string;
+}
+
 export interface ICustomerBalanceRequest {
   customerId: string;
 }

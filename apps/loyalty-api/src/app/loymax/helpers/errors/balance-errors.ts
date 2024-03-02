@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import { ILoymaxXMLResponceErrorCode } from '../../interfaces/errors.interface';
+import { ILoymaxXMLResponseErrorCode } from '../../interfaces/errors.interface';
 
-export function balanceErrorHandler(error: ILoymaxXMLResponceErrorCode) {
+export function balanceErrorHandler(error: ILoymaxXMLResponseErrorCode) {
   if (error.ErrorCode === '0') {
     return error;
   }

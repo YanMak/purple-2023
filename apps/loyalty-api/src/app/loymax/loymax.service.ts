@@ -6,14 +6,21 @@ import { ILoymaxCalculateProductRequest } from './interfaces/calculate.interface
 import { ILoymaxDiscountProductRequest } from './interfaces/discount.interface';
 import { ILoymaxPay } from './interfaces/pay.interface';
 import { LoymaxConfirmPurchaseService } from './services/loymax-confirm-purchase.service';
+import { LoymaxAvailableAmountService } from './services/loymax-available-amount.service';
+import { LoymaxCancelPurchaseService } from './services/cancel-purchase.service';
+import { LoymaxPaymentService } from './services/loymax-payment.service';
+import { ILoymaxCoupon } from './interfaces/coupon.interface';
 
 @Injectable()
 export class LoymaxService {
   constructor(
     private readonly loymaxBalanceService: LoymaxBalanceService,
     private readonly loymaxCalculateService: LoymaxCalculateService,
+    private readonly loymaxAvailableAmountService: LoymaxAvailableAmountService,
     private readonly loymaxDiscountService: LoymaxDiscountService,
-    private readonly loymaxConfirmPurchaseService: LoymaxConfirmPurchaseService
+    private readonly loymaxConfirmPurchaseService: LoymaxConfirmPurchaseService,
+    private readonly loymaxCancelPurchaseService: LoymaxCancelPurchaseService,
+    private readonly loymaxPaymentService: LoymaxPaymentService
   ) {}
 
   async balance(customerId: string, cashRegisterId: string) {
@@ -27,7 +34,7 @@ export class LoymaxService {
       cashRegisterId
     );
 
-    const parsed = await this.loymaxBalanceService.parseBalanceResponceXML(
+    const parsed = await this.loymaxBalanceService.parseBalanceResponseXML(
       data
     );
     console.log(parsed);
@@ -38,16 +45,18 @@ export class LoymaxService {
     customerId,
     cashRegisterId,
     purchaseId,
-    chequeNumber,
+    chequeId,
     chequeDate,
     products,
+    coupons,
   }: {
     customerId: string;
     cashRegisterId: string;
     purchaseId: string;
-    chequeNumber: string;
-    chequeDate: Date;
+    chequeId: string;
+    chequeDate: string;
     products: ILoymaxCalculateProductRequest[];
+    coupons: ILoymaxCoupon[];
   }) {
     const requestPayload =
       await this.loymaxCalculateService.getCalculateRequestXML({
@@ -55,8 +64,9 @@ export class LoymaxService {
         cashRegisterId,
         products,
         purchaseId,
-        chequeNumber,
+        chequeId,
         chequeDate,
+        coupons,
       });
     console.log(requestPayload);
 
@@ -65,7 +75,99 @@ export class LoymaxService {
       cashRegisterId
     );
 
-    const parsed = await this.loymaxCalculateService.parseCalculateResponceXML(
+    const parsed = await this.loymaxCalculateService.parseCalculateResponseXML(
+      data
+    );
+    console.log(parsed);
+    return parsed;
+  }
+
+  async availableAmount({
+    customerId,
+    cashRegisterId,
+    purchaseId,
+    chequeId,
+    chequeDate,
+    products,
+    coupons,
+  }: {
+    customerId: string;
+    cashRegisterId: string;
+    purchaseId: string;
+    chequeId: string;
+    chequeDate: string;
+    products: ILoymaxCalculateProductRequest[];
+    coupons: ILoymaxCoupon[];
+  }) {
+    const requestPayload =
+      await this.loymaxAvailableAmountService.getAvailableAmountRequestXML({
+        customerId,
+        cashRegisterId,
+        products,
+        purchaseId,
+        chequeId,
+        chequeDate,
+        coupons,
+      });
+    console.log(requestPayload);
+
+    const data =
+      await this.loymaxAvailableAmountService.sendAvailableAmountRequestQuery(
+        requestPayload,
+        cashRegisterId
+      );
+
+    const parsed =
+      await this.loymaxAvailableAmountService.parseAvailableAmountResponseXML(
+        data
+      );
+    console.log(parsed);
+    return parsed;
+  }
+
+  async payment({
+    customerId,
+    cashRegisterId,
+    purchaseId,
+    chequeId,
+    chequeDate,
+    products,
+    bonusWriteOffAmount,
+    coupons,
+  }: {
+    customerId: string;
+    cashRegisterId: string;
+    purchaseId: string;
+    chequeId: string;
+    chequeDate: string;
+    products: ILoymaxCalculateProductRequest[];
+    bonusWriteOffAmount: number;
+    coupons: ILoymaxCoupon[];
+  }) {
+    //console.log(`!!!!!!! this is async payment({ !!!!!!!!`);
+    const requestPayload = await this.loymaxPaymentService.getPaymentRequestXML(
+      {
+        customerId,
+        cashRegisterId,
+        products,
+        purchaseId,
+        chequeId,
+        chequeDate,
+        bonusWriteOffAmount,
+        coupons,
+      }
+    );
+
+    console.log(requestPayload);
+
+    //return true;
+
+    const data = await this.loymaxPaymentService.sendPaymentRequestQuery(
+      requestPayload,
+      cashRegisterId
+    );
+
+    const parsed = await this.loymaxPaymentService.parsePaymentResponseXML(
       data
     );
     console.log(parsed);
@@ -76,20 +178,22 @@ export class LoymaxService {
     customerId: string,
     cashRegisterId: string,
     purchaseId: string,
-    chequeNumber: string,
-    chequeDate: Date,
+    chequeId: string,
+    chequeDate: string,
     products: ILoymaxDiscountProductRequest[],
-    pays: ILoymaxPay[]
+    pays: ILoymaxPay[],
+    coupons: ILoymaxCoupon[]
   ) {
     const requestPayload =
       await this.loymaxDiscountService.getDiscountRequestXML({
         customerId,
         cashRegisterId,
         purchaseId,
-        chequeNumber,
+        chequeId,
         chequeDate,
         products,
         pays,
+        coupons,
       });
     console.log(requestPayload);
 
@@ -98,7 +202,7 @@ export class LoymaxService {
       cashRegisterId
     );
 
-    const parsed = await this.loymaxDiscountService.parseDiscountResponceXML(
+    const parsed = await this.loymaxDiscountService.parseDiscountResponseXML(
       data
     );
     console.log(parsed);
@@ -108,7 +212,7 @@ export class LoymaxService {
     //return { xmlResult: data };
 
     /*
-	  const parsed = await this.loymaxDiscountService.parseBalanceResponceXML(
+	  const parsed = await this.loymaxDiscountService.parseBalanceResponseXML(
 		data
 	  );
 	  console.log(parsed);
@@ -136,13 +240,38 @@ export class LoymaxService {
     console.log(data);
 
     const parsed =
-      await this.loymaxConfirmPurchaseService.parseConfirmPurchaseResponceXML(
+      await this.loymaxConfirmPurchaseService.parseConfirmPurchaseResponseXML(
         data
       );
     console.log(parsed);
     return parsed;
     //return { xmlResult: data };
-    /*const parsed = await this.loymaxBalanceService.parseBalanceResponceXMLPayload(
+    /*const parsed = await this.loymaxBalanceService.parseBalanceResponseXMLPayload(
+      data
+    );
+    console.log(parsed);
+    return parsed;*/
+  }
+
+  async cancelPurchase(cashRegisterId: string, purchaseId: string) {
+    const requestPayload =
+      await this.loymaxCancelPurchaseService.getCancelPurchaseRequestXML({
+        cashRegisterId,
+        purchaseId,
+      });
+
+    const data = await this.loymaxCancelPurchaseService.sendCancelPurchaseQuery(
+      requestPayload,
+      cashRegisterId
+    );
+    console.log(data);
+
+    const parsed =
+      await this.loymaxCancelPurchaseService.parseCancelResponseXML(data);
+    console.log(parsed);
+    return parsed;
+    //return { xmlResult: data };
+    /*const parsed = await this.loymaxBalanceService.parseBalanceResponseXMLPayload(
       data
     );
     console.log(parsed);

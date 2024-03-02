@@ -1,4 +1,4 @@
-export interface ILoymaxCalculateProductRequest {
+export interface ILoymaxPaymentProductRequest {
   positionId: number;
   productId: string;
   quantity: number;
@@ -7,7 +7,7 @@ export interface ILoymaxCalculateProductRequest {
   name: string;
 }
 
-export interface ILoymaxCalculateProductResult {
+export interface ILoymaxPaymentProductResult {
   positionId: number;
   productId: string;
   quantity: number;
@@ -15,5 +15,5 @@ export interface ILoymaxCalculateProductResult {
   amount: number;
   cashback: number;
   discount: number;
-  availableBonusPay?: number;
+  bonusPay?: number;
 }

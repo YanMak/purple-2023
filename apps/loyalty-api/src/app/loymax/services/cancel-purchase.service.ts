@@ -1,17 +1,20 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Builder, Parser } from 'xml2js';
-import { LOYMAX_API_VERSION } from '../loymax.constants';
-import { generateOperationId } from '../../helpers/generate-operation-id';
-import { getDateForXML } from '../helpers/date-for-xml';
 import { ILoymaxCashRegister } from '../interfaces/cash-register.interface';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
+import { LOYMAX_API_VERSION } from '../loymax.constants';
+import { generatePurchaseId } from '../../helpers/generate-purchase-id';
+import { generateOperationId } from '../../helpers/generate-operation-id';
+import { Builder, Parser } from 'xml2js';
+import { getDateForXML } from '../helpers/date-for-xml';
 import { getCashRegisterData } from '../helpers/cash-register';
 import { getApiUrl } from '../helpers/loymax-api-url';
-import { confirmPurchaseErrorHandler } from '../helpers/errors/confirm-purchase-errors';
+import { cancelPurchaseErrorHandler } from '../helpers/errors/cancel-purchase-errors';
 
 @Injectable()
-export class LoymaxConfirmPurchaseService {
+export class LoymaxCancelPurchaseService {
+  //user: string;
+  //password: string;
   url: string;
   cashRegisters: ILoymaxCashRegister[];
 
@@ -24,12 +27,18 @@ export class LoymaxConfirmPurchaseService {
     console.log(this.cashRegisters);
   }
 
-  async getConfirmPurchaseRequestXMLPayload(
-    customerId: string,
-    cashRegisterId: string,
-    purchaseId: string
-  ) {
-    const operationID = await generateOperationId();
+  async getCancelPurchaseRequestXML({
+    cashRegisterId,
+    purchaseId,
+  }: {
+    cashRegisterId: string;
+    purchaseId?: string;
+  }) {
+    const operationID = await generateOperationId(); // always newly generated
+    if (!purchaseId) {
+      purchaseId = await generatePurchaseId();
+    }
+
     const lastmod = getDateForXML(new Date());
 
     const builder = new Builder({
@@ -45,14 +54,15 @@ export class LoymaxConfirmPurchaseService {
           'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
         },
         Version: LOYMAX_API_VERSION,
-        ConfirmPurchases: {
-          ConfirmPurchaseRequest: {
+        CancelPurchases: {
+          CancelPurchaseRequest: {
             $: {
               ElementID: '1',
               OperationID: operationID,
               OperationDate: lastmod,
               DeviceLogicalID: cashRegisterId,
               PurchaseID: purchaseId,
+              Cashier: 'Администратор077',
             },
           },
         },
@@ -60,7 +70,7 @@ export class LoymaxConfirmPurchaseService {
     });
   }
 
-  async sendConfirmPurchaseQuery(bodyXML: string, cashRegisterId: string) {
+  async sendCancelPurchaseQuery(bodyXML: string, cashRegisterId: string) {
     console.log(bodyXML);
     const cashRegister = getCashRegisterData(
       this.cashRegisters,
@@ -79,21 +89,19 @@ export class LoymaxConfirmPurchaseService {
     return data;
   }
 
-  async parseConfirmPurchaseResponseXML(bodyXML: string) {
+  async parseCancelResponseXML(bodyXML: string) {
     const parser = new Parser();
 
     const result = await parser.parseStringPromise(bodyXML);
 
     const errorCode =
-      result['XMLResponse']['ConfirmPurchases'][0][
-        'ConfirmPurchaseResponse'
-      ][0]['$'];
-    const errorHandler = confirmPurchaseErrorHandler(errorCode);
-    console.log(errorHandler);
-    /*if (errorHandler.statusCode !== 200 && errorHandler.statusCode !== 201) {
-      throw new ForbiddenException(errorHandler.message);
+      result['XMLResponse']['CancelPurchases'][0]['CancelPurchaseRequest'][0][
+        '$'
+      ];
+    /*const errorHandler = calculateErrorHandler(errorCode);
+    if (errorHandler.statusCode !== 200 && errorHandler.statusCode !== 201) {
+      return errorHandler;
     }*/
-
-    return errorHandler;
+    return cancelPurchaseErrorHandler(errorCode);
   }
 }

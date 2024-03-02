@@ -1,11 +1,11 @@
-/*export const LoymaxBalanceXMLResponceErrorCodeNoError = '0';
-export const LoymaxBalanceXMLResponceErrorCodeNotFound = '201';
-export const ILoymaxBalanceXMLResponceErrorCodeErrorCode =
-  | LoymaxBalanceXMLResponceErrorCodeNotFound
-  | LoymaxBalanceXMLResponceErrorCodeNoError;
+/*export const LoymaxBalanceXMLResponseErrorCodeNoError = '0';
+export const LoymaxBalanceXMLResponseErrorCodeNotFound = '201';
+export const ILoymaxBalanceXMLResponseErrorCodeErrorCode =
+  | LoymaxBalanceXMLResponseErrorCodeNotFound
+  | LoymaxBalanceXMLResponseErrorCodeNoError;
 */
 
-export interface ILoymaxXMLResponceErrorCode {
+export interface ILoymaxXMLResponseErrorCode {
   ErrorCode: string;
   ErrorMessage: string;
   DeviceLogicalID: string;
