@@ -1,6 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import { CustomerService } from './customer/customer.service';
+import { ICustomerOrderMetadata } from '@purple-2023/interfaces';
 
 @Controller()
 export class AppController {
@@ -18,6 +19,15 @@ export class AppController {
       customerId,
       basketId: await this.customerService.basketId(customerId),
     };
+  }
+
+  @Post('update-order-metadata/:client_id')
+  async updateOrderMetadata(
+    @Param('client_id') customerId: string,
+    @Body() order: ICustomerOrderMetadata
+  ) {
+    //console.log(order);
+    return this.customerService.updateOrder({ customerId, order });
   }
 
   /*

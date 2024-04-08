@@ -1,12 +1,16 @@
 export interface ICustomer {
   customerId: string;
   basketId: string;
-  orders: ICustomerOrder[];
+  chequeId: string;
+  chequeDate: string;
+  orders: ICustomerOrderMetadata[];
 }
 
-export interface ICustomerOrder {
+export interface ICustomerOrderMetadata {
   orderId: string;
   purchaseId: string;
-  chequeId: string;
-  online: boolean;
+  chequeId?: string;
+  chequeDate?: string;
+  online?: boolean;
+  orderStatus: string;
 }

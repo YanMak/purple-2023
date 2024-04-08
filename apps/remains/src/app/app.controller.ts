@@ -1,11 +1,18 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post } from '@nestjs/common';
 
 import { AppService } from './app.service';
-import { IDeliveryPointProfile, IWarehouseRemains } from '@purple-2023/interfaces';
+import {
+  IDeliveryPointProfile,
+  IWarehouseRemains,
+} from '@purple-2023/interfaces';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) { }
+  constructor(
+    private readonly appService: AppService,
+    private readonly scheduleRegistry: SchedulerRegistry
+  ) {}
 
   @Post('create-update-points')
   async createUpdatePoints(@Body() dtos: IDeliveryPointProfile[]) {
@@ -15,28 +22,39 @@ export class AppController {
   }
 
   @Post('reload-remains')
-  async reloadRemains(@Body() { id, remains }: { id: string, remains: IWarehouseRemains[] }) {
-    return this.appService.reloadRemains(id, remains)
+  async reloadRemains(
+    @Body() { id, remains }: { id: string; remains: IWarehouseRemains[] }
+  ) {
+    return this.appService.reloadRemains(id, remains);
   }
 
   @Post('update-remains')
-  async updateRemains(@Body() { id, remains }: { id: string, remains: IWarehouseRemains[] }) {
-    return this.appService.updateRemains(id, remains)
+  async updateRemains(
+    @Body() { id, remains }: { id: string; remains: IWarehouseRemains[] }
+  ) {
+    return this.appService.updateRemains(id, remains);
   }
 
   @Post('get-remains-by-filter')
   async getRemainsByFilter() {
     // @Body() { city, product_ids, pointIds }
-    // most common cases: 
+    // most common cases:
     // user opens site/app with city set by default
     // user sees catalogue cards only available in his city
-    //    for fast agregation it can be built on view model 
+    //    for fast agregation it can be built on view model
     //    - after remains update request service makes notification for data base View
     //    , so we will translate remains from View table, not from points table
 
     // at first step we only use product_ids filter
     return this.appService.getRemainsByFilter();
+  }
 
+  @Cron(CronExpression.EVERY_10_SECONDS, { name: 'test' })
+  async cronTest() {
+    this.scheduleRegistry.getCronJob('test');
+    //console.log(111);
+    //Logger.log(new Date());
+    //this.appService.reloadRemains('', []);
   }
 
   /*

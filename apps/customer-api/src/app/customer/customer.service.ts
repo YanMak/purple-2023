@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CustomerEntity } from './entities/customer.entity';
 import { CustomerRepository } from './repositories/customer.repository';
-import { ICustomerOrder } from '@purple-2023/interfaces';
+import { ICustomerOrderMetadata } from '@purple-2023/interfaces';
 
 @Injectable()
 export class CustomerService {
@@ -13,9 +13,26 @@ export class CustomerService {
     return this.customerRepository.findCustomer(customerId);
   }
 
+  async updateOrder({
+    customerId,
+    order,
+  }: {
+    customerId: string;
+    order: ICustomerOrderMetadata;
+  }) {
+    const customer = await this.findCustomer(customerId);
+    const customerEntity = new CustomerEntity(customer);
+    customerEntity.updateOrder(order);
+    console.log(`customer service customerEntity`);
+    console.log(customerEntity);
+    //const { customerId: customerId_, ...rest } = customerEntity;
+    //console.log(customerId_)
+    return await this.customerRepository.updateCustomer(customerEntity);
+  }
+
   async customerOrders(
     customerId: string
-  ): Promise<{ orders: ICustomerOrder[] }> {
+  ): Promise<{ orders: ICustomerOrderMetadata[] }> {
     const customer = await this.customerRepository.findCustomer(customerId);
     return { orders: customer.orders };
   }
@@ -31,6 +48,8 @@ export class CustomerService {
       const newCustomerEntitity = new CustomerEntity({
         customerId,
         basketId: '',
+        chequeDate: '',
+        chequeId: '',
         orders: [],
       });
       //console.log(`newCustomerEntitity`);
@@ -65,7 +84,7 @@ export class CustomerService {
         basketId: customerEntitity.basketId,
       });
       //console.log(`const res = await this.customerRepository.updateBasketId({`);
-      //console.log(res);
+      console.log(res);
     }
     //console.log(`customerEntitity.basketId: ${customerEntitity.basketId}`);
     return customerEntitity.basketId;

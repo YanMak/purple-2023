@@ -1,0 +1,50 @@
+{
+  "name": "logistics-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/logistics-api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/logistics-api",
+        "main": "apps/logistics-api/src/main.ts",
+        "tsConfig": "apps/logistics-api/tsconfig.app.json",
+        "assets": ["apps/logistics-api/src/assets"],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/logistics-api/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "logistics-api:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "logistics-api:build:development"
+        },
+        "production": {
+          "buildTarget": "logistics-api:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/logistics-api/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

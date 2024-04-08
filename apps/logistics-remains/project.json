@@ -1,0 +1,57 @@
+{
+  "name": "logistics-remains",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/logistics-remains/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/logistics-remains",
+        "main": "apps/logistics-remains/src/main.ts",
+        "tsConfig": "apps/logistics-remains/tsconfig.app.json",
+        "assets": ["apps/logistics-remains/src/assets"],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/logistics-remains/webpack.config.js"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "logistics-remains:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "logistics-remains:build:development"
+        },
+        "production": {
+          "buildTarget": "logistics-remains:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/logistics-remains/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/logistics-remains/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

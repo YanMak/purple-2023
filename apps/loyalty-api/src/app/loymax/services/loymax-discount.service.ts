@@ -53,6 +53,8 @@ export class LoymaxDiscountService {
     chequeDate?: string;
     coupons: ILoymaxCoupon[];
   }) {
+    console.log(`pays:`);
+    console.log(pays);
     const operationID = await generateOperationId(); // always newly generated
     if (!purchaseId) {
       purchaseId = await generatePurchaseId();

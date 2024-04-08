@@ -1,6 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Post } from '@nestjs/common';
-import { IDeliveryPoint, IDeliveryPointProfile, IWarehouseRemains } from '@purple-2023/interfaces';
+import {
+  IDeliveryPoint,
+  IDeliveryPointProfile,
+  IWarehouseRemains,
+} from '@purple-2023/interfaces';
 import { AxiosResponse } from 'axios';
 import { DeliveryPointRepository } from './repositories/delivery-point.repository';
 import { DeliveryPointEntity } from './entities/delivery-point.entity';
@@ -10,16 +14,16 @@ export class AppService {
   constructor(
     private readonly httpService: HttpService,
     private readonly pointRepository: DeliveryPointRepository
-  ) { }
+  ) {}
 
   ////////////////////////
   // POINT PROFILES {
   public async createUpdatePoints(dtos: IDeliveryPointProfile[]) {
-    dtos.map(dto => this.createUpdatePoint(dto))
+    dtos.map((dto) => this.createUpdatePoint(dto));
   }
 
   public async createUpdatePoint(dto: IDeliveryPointProfile) {
-    return this.pointRepository.createUpdateProfile(dto)
+    return this.pointRepository.createUpdateProfile(dto);
   }
   // } POINT PROFILES
   //////////////////////////
@@ -30,16 +34,15 @@ export class AppService {
     try {
       const res = await this.pointRepository.setRemains(id, remains);
       console.log(`succesfully save remains ` + id);
-      return res
-    }
-    catch (e) {
+      return res;
+    } catch (e) {
       console.log(`cant save remains ` + id);
-      return undefined
+      return undefined;
     }
   }
 
   public async updateRemains(id: string, newRemains: IWarehouseRemains[]) {
-    return this.pointRepository.updateRemains(id, newRemains)
+    return this.pointRepository.updateRemains(id, newRemains);
   }
 
   public async getRemainsByFilter() {
@@ -48,8 +51,6 @@ export class AppService {
 
   // } POINT REMAINS
   //////////////////////////
-
-
 
   /*
   public async ping(): Promise<{ message: string }> {
@@ -184,5 +185,4 @@ export class AppService {
   }
 
 */
-
 }

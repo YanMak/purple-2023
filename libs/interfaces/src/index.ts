@@ -13,3 +13,6 @@ export * from './lib/account-alari/events.interface';
 
 export * from './lib/customer.interface';
 export * from './lib/loyalty.interface';
+
+export * from './lib/logistics-remains/remains.interface';
+export * from './lib/logistics-remains/warehouse.interface';

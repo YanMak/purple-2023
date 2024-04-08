@@ -184,6 +184,7 @@ export class LoymaxService {
     pays: ILoymaxPay[],
     coupons: ILoymaxCoupon[]
   ) {
+    console.log(`async discount() loymax service discount`);
     const requestPayload =
       await this.loymaxDiscountService.getDiscountRequestXML({
         customerId,
